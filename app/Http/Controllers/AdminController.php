@@ -315,12 +315,12 @@ class AdminController extends Controller
             ->where('id_laporan', '=', $id)->get();
 
         $laporan = DB::table('laporan')
-            ->leftJoin(DB::raw('(SELECT id_laporan, MAX(tanggal) AS tanggal FROM laporanhist GROUP BY id_laporan) AS latest_laporanhist'), function ($join) {
-                $join->on('laporan.id', '=', 'latest_laporanhist.id_laporan');
-            })
+            // ->leftJoin(DB::raw('(SELECT id_laporan, MAX(tanggal) AS tanggal FROM laporanhist GROUP BY id_laporan) AS latest_laporanhist'), function ($join) {
+            //     $join->on('laporan.id', '=', 'latest_laporanhist.id_laporan');
+            // })
             ->leftJoin('laporanhist', function ($join) {
-                $join->on('laporan.id', '=', 'laporanhist.id_laporan')
-                    ->on('laporanhist.tanggal', '=', 'latest_laporanhist.tanggal');
+                $join->on('laporan.id', '=', 'laporanhist.id_laporan');
+                // ->on('laporanhist.tanggal', '=', 'latest_laporanhist.tanggal');
             })
             ->leftjoin('teknisi', 'teknisi.id', '=', 'laporan.id_teknisi')
             ->leftJoin('pelapor', 'pelapor.id', '=', 'laporan.id_pelapor')
@@ -338,6 +338,7 @@ class AdminController extends Controller
                 'pelapor.nama as nama_pelapor',
                 'pelapor.jabatan as jabatan_pelapor'
             )
+            ->orderBy('laporanhist.id', 'desc')
             ->first();
 
         // Dapatkan nomor referensi terakhir dari database

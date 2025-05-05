@@ -31,21 +31,21 @@
                             <td style="width: 15px;">:</td>
                             <td>
                                 @if($laporan->status_terakhir == 'Pengajuan')
-                                <span class="badge badge-primary">Open</span>
+                                <span class="badge badge-primary">Dibuka</span>
                                 @elseif($laporan->status_terakhir == 'Diproses')
                                 <span class="badge badge-info">Diproses</span>
                                 @elseif($laporan->status_terakhir == 'CheckedU')
                                 <span class="badge badge-warning">User Check</span>
                                 @elseif($laporan->status_terakhir == 'ReqHapus')
-                                <span class="badge badge-warning">Request <i class="fa fa-trash-o" aria-hidden="true"></i></span>
+                                <span class="badge badge-warning">Permohonan dihapus</span>
                                 @elseif($laporan->status_terakhir == 'reqAddTime')
                                 <span class="badge badge-warning">User Check</span>
                                 @elseif($laporan->status_terakhir == 'Selesai')
-                                <span class="badge badge-success">Closed</span>
+                                <span class="badge badge-success">Selesai</span>
                                 @elseif($laporan->status_terakhir == 'Manager')
                                 <span class="badge badge-success">Manager</span>
                                 @elseif($laporan->status_terakhir == 'Dibatalkan')
-                                <span class="badge badge-danger">Cancel</span>
+                                <span class="badge badge-danger">Dibatalkan</span>
                                 @endif
                             </td>
                         </tr>
@@ -109,9 +109,9 @@
                             @endif
                         </tr>
                     </table> <br>
-                    @if($laporan->status_terakhir == 'Selesai')
+                    <!-- @if($laporan->status_terakhir == 'Selesai')
                     <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal{{$laporan->id}}" data-whatever="@getbootstrap">Laporan</button>
-                    @endif
+                    @endif -->
                 </div>
             </div>
         </div>
