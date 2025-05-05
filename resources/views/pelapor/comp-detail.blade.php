@@ -40,7 +40,7 @@
                                 @elseif($laporan->status_terakhir == 'Diproses')
                                 <span class="badge badge-info">Diproses</span>
                                 @elseif($laporan->status_terakhir == 'CheckedU' or $laporan->status_terakhir == 'CheckLapU' or $laporan->status_terakhir == 'reqAddTime')
-                                <span class="badge badge-warning">Ditunda</span>
+                                <span class="badge badge-warning">Konfirmasi pelapor</span>
                                 @elseif($laporan->status_terakhir == 'Selesai')
                                 <span class="badge badge-success">Selesai</span>
                                 @elseif($laporan->status_terakhir == 'Manager')

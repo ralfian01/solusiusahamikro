@@ -80,18 +80,18 @@
                                     </td>
                                     <td>
                                         @if($data->status_terakhir == 'Pengajuan')
-                                        <span class="badge badge-primary">Open</span>
+                                        <span class="badge badge-primary">Dibuka</span>
                                         @elseif($data->status_terakhir == 'Diproses')
                                         <span class="badge badge-info">Diproses</span>
                                         @elseif($data->status_terakhir == 'CheckedU')
-                                        <span class="badge badge-warning">User Check</span>
+                                        <span class="badge badge-warning">Diperiksa pelapor</span>
                                         @elseif($data->status_terakhir == 'ReqHapus')
-                                        <span class="badge badge-warning">Request <i class="fa fa-trash-o" aria-hidden="true"></i></span>
+                                        <span class="badge badge-warning">Permohonan dihapus</span>
                                         @elseif($data->status_terakhir == 'reqAddTime')
-                                        <span class="badge badge-warning">User Check</span>
+                                        <span class="badge badge-warning">Konfirmasi pelapor</span>
                                         <!-- <span class="badge badge-warning">Request <i class="fa fa-clock-o" aria-hidden="true"></i></span> -->
                                         @elseif($data->status_terakhir == 'Dibatalkan')
-                                        <span class="badge badge-danger">Cancel</span>
+                                        <span class="badge badge-danger">Dibatalkan</span>
                                         @endif
                                     </td>
                                     <td>

@@ -81,7 +81,7 @@
                                         @elseif($data->status_terakhir == 'Diproses')
                                         <span class="badge badge-info">Diproses</span>
                                         @elseif($data->status_terakhir == 'CheckedU' or $data->status_terakhir == 'CheckLapU' or $data->status_terakhir == 'reqAddTime')
-                                        <span class="badge badge-warning">Ditunda</span>
+                                        <span class="badge badge-warning">Konfirmasi pelapor</span>
                                         @elseif($data->status_terakhir == 'Selesai')
                                         <span class="badge badge-success">Selesai</span>
                                         @elseif($data->status_terakhir == 'Manager')
