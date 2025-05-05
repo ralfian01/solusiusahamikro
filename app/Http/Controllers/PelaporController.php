@@ -43,12 +43,13 @@ class PelaporController extends Controller
         //     ->get();
 
         $dtLap = DB::table('laporan')
-            ->leftJoin(DB::raw('(SELECT id_laporan, MAX(tanggal) AS tanggal FROM laporanhist GROUP BY id_laporan) AS latest_laporanhist'), function ($join) {
+            ->leftJoin(DB::raw('(SELECT id_laporan, MAX(id) AS id FROM laporanhist GROUP BY id_laporan) AS latest_laporanhist'), function ($join) {
                 $join->on('laporan.id', '=', 'latest_laporanhist.id_laporan');
             })
             ->leftJoin('laporanhist', function ($join) {
-                $join->on('laporan.id', '=', 'laporanhist.id_laporan')
-                    ->on('laporanhist.tanggal', '=', 'latest_laporanhist.tanggal');
+                $join
+                    ->on('laporan.id', '=', 'laporanhist.id_laporan')
+                    ->on('laporanhist.id', '=', 'latest_laporanhist.id');
             })
             ->leftJoin('pelapor', 'laporan.id_pelapor', '=', 'pelapor.id')
             ->select(
@@ -60,7 +61,7 @@ class PelaporController extends Controller
                 'laporan.waktu_tambahan',
                 DB::raw("DATE_FORMAT(laporan.tgl_masuk, '%d %M %Y') AS tgl_masuk"),
                 'laporan.no_inv_aset',
-                DB::raw("DATE_FORMAT(laporan.tgl_akhir_pengerjaan, '%d %M %Y,  %H:%i WIB') AS tgl_akhir_pengerjaan"),
+                DB::raw("DATE_FORMAT(laporan.tgl_akhir_pengerjaan, '%d %M %Y, %H:%i WIB') AS tgl_akhir_pengerjaan"),
                 'laporan.tgl_akhir_pengerjaan AS deadline',
                 'laporanhist.tanggal AS tanggal_status_terbaru',
                 'laporanhist.keterangan',
@@ -68,9 +69,10 @@ class PelaporController extends Controller
                 'laporanhist.id AS idhist',
                 'laporan.id as id'
             )
-            ->whereNotIn('laporanhist.status_laporan', ['Selesai', 'Dibatalkan'])
+            // ->whereNotIn('laporanhist.status_laporan', ['Selesai', 'Dibatalkan'])
             ->where('laporan.id_pelapor', '=', Auth::guard('pelapor')->user()->id)
-            ->orderBy('laporanhist.tanggal', 'desc')
+            ->orderBy('laporan.id', 'desc')
+            ->groupBy('laporan.id')
             ->get();
 
         // FORMAT TANGGAL '%d/%m/%Y %H:%i'
@@ -105,31 +107,33 @@ class PelaporController extends Controller
     public function detail($id)
     {
         $laporan = DB::table('laporan')
-            ->leftJoin(DB::raw('(SELECT id_laporan, MAX(tanggal) AS tanggal FROM laporanhist GROUP BY id_laporan) AS latest_laporanhist'), function ($join) {
-                $join->on('laporan.id', '=', 'latest_laporanhist.id_laporan');
-            })
+            // ->leftJoin(DB::raw('(SELECT id_laporan, MAX(tanggal) AS tanggal FROM laporanhist GROUP BY id_laporan) AS latest_laporanhist'), function ($join) {
+            //     $join->on('laporan.id', '=', 'latest_laporanhist.id_laporan');
+            // })
             ->leftJoin('laporanhist', function ($join) {
-                $join->on('laporan.id', '=', 'laporanhist.id_laporan')
-                    ->on('laporanhist.tanggal', '=', 'latest_laporanhist.tanggal');
+                $join->on('laporan.id', '=', 'laporanhist.id_laporan');
+                // ->on('laporanhist.tanggal', '=', 'latest_laporanhist.tanggal');
             })
             ->leftjoin('teknisi', 'teknisi.id', '=', 'laporan.id_teknisi')
             ->where('laporan.id', '=', $id)
             ->select(
-                DB::raw("DATE_FORMAT(laporan.tgl_masuk, '%d %M %Y') AS tgl_masuk"),
-                DB::raw("DATE_FORMAT(laporan.tgl_selesai, '%d %M %Y') AS tgl_selesai"),
+                DB::raw("DATE_FORMAT(laporan.tgl_masuk, '%d %M %Y, %H:%i WIB') AS tgl_masuk"),
+                DB::raw("DATE_FORMAT(laporan.tgl_selesai, '%d %M %Y, %H:%i WIB') AS tgl_selesai"),
                 DB::raw("DATE_FORMAT(laporan.tgl_awal_pengerjaan, '%d %M %Y, %H:%i WIB') AS tgl_awal_pengerjaan"),
-                DB::raw("DATE_FORMAT(laporan.tgl_akhir_pengerjaan, '%d %M %Y,  %H:%i WIB') AS tgl_akhir_pengerjaan"),
+                DB::raw("DATE_FORMAT(laporan.tgl_akhir_pengerjaan, '%d %M %Y, %H:%i WIB') AS tgl_akhir_pengerjaan"),
                 'no_inv_aset',
                 'waktu_tambahan',
                 'id_teknisi',
                 'teknisi.nama',
                 'waktu_tambahan_peng',
+                'laporanhist.id as laporanhist_id',
                 'laporanhist.status_laporan as status_terakhir',
                 'laporan.id as idlap',
                 'laporan.tgl_akhir_pengerjaan AS deadline',
                 'laporan.id AS idlap',
                 'laporanhist.keterangan as keterangan'
             )
+            ->orderBy('laporanhist.id', 'DESC')
             ->first();
 
         $detlaporan = DB::table('detlaporan')

@@ -36,17 +36,17 @@
                             <td style="width: 15px;">:</td>
                             <td>
                                 @if($laporan->status_terakhir == 'Pengajuan')
-                                <span class="badge badge-primary">Open</span>
+                                <span class="badge badge-primary">Dibuka</span>
                                 @elseif($laporan->status_terakhir == 'Diproses')
-                                <span class="badge badge-info">Process</span>
+                                <span class="badge badge-info">Diproses</span>
                                 @elseif($laporan->status_terakhir == 'CheckedU' or $laporan->status_terakhir == 'CheckLapU' or $laporan->status_terakhir == 'reqAddTime')
-                                <span class="badge badge-warning">Postponed</span>
+                                <span class="badge badge-warning">Ditunda</span>
                                 @elseif($laporan->status_terakhir == 'Selesai')
-                                <span class="badge badge-success">Closed</span>
+                                <span class="badge badge-success">Selesai</span>
                                 @elseif($laporan->status_terakhir == 'Manager')
-                                <span class="badge badge-success">Closed</span>
+                                <span class="badge badge-success">Ditutup</span>
                                 @elseif($laporan->status_terakhir == 'Dibatalkan')
-                                <span class="badge badge-danger">Cancel</span>
+                                <span class="badge badge-danger">Dibatalkan</span>
                                 @endif
                             </td>
                         </tr>

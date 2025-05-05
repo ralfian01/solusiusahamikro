@@ -66,7 +66,7 @@
                                         @endif
                                     </td>
                                     <td>
-                                        @if($data->status_terakhir == 'Pengajuan')
+                                        <!-- @if($data->status_terakhir == 'Pengajuan')
                                         <span class="badge badge-primary">Open</span>
                                         @elseif($data->status_terakhir == 'Diproses')
                                         <span class="badge badge-info">Diproses</span>
@@ -74,6 +74,20 @@
                                         <span class="badge badge-warning">Postponed</span>
                                         @elseif($data->status_terakhir == 'ReqHapus')
                                         <span class="badge badge-warning">Request <i class="fa fa-trash-o" aria-hidden="true"></i></span>
+                                        @endif -->
+
+                                        @if($data->status_terakhir == 'Pengajuan')
+                                        <span class="badge badge-primary">Dibuka</span>
+                                        @elseif($data->status_terakhir == 'Diproses')
+                                        <span class="badge badge-info">Diproses</span>
+                                        @elseif($data->status_terakhir == 'CheckedU' or $data->status_terakhir == 'CheckLapU' or $data->status_terakhir == 'reqAddTime')
+                                        <span class="badge badge-warning">Ditunda</span>
+                                        @elseif($data->status_terakhir == 'Selesai')
+                                        <span class="badge badge-success">Selesai</span>
+                                        @elseif($data->status_terakhir == 'Manager')
+                                        <span class="badge badge-success">Ditutup</span>
+                                        @elseif($data->status_terakhir == 'Dibatalkan')
+                                        <span class="badge badge-danger">Dibatalkan</span>
                                         @endif
                                     </td>
 
