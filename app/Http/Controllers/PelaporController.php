@@ -184,6 +184,13 @@ class PelaporController extends Controller
             'status'    => 0
         ]);
 
+        NoTelepon::create([
+            'owner_id'      => $pelapor->id,
+            'nomor'         => $request->telepon,
+            'owner_type'    => 'pelapor',
+            'notifikasi'    => true
+        ]);
+
         $id_pelapor = $pelapor->id;
 
         // $nama_file_ttd = $id_pelapor . "_" . time() . "_" . $ttd->getClientOriginalName();
