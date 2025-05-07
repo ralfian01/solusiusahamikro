@@ -510,12 +510,12 @@ class AdminController extends Controller
 
         if ($filter == null) {
             $data = DB::table('laporan')
-                ->leftJoin(DB::raw('(SELECT id_laporan, MAX(tanggal) AS tanggal FROM laporanhist GROUP BY id_laporan) AS latest_laporanhist'), function ($join) {
+                ->leftJoin(DB::raw('(SELECT id_laporan, MAX(id) AS id FROM laporanhist GROUP BY id_laporan) AS latest_laporanhist'), function ($join) {
                     $join->on('laporan.id', '=', 'latest_laporanhist.id_laporan');
                 })
                 ->leftJoin('laporanhist', function ($join) {
                     $join->on('laporan.id', '=', 'laporanhist.id_laporan')
-                        ->on('laporanhist.tanggal', '=', 'latest_laporanhist.tanggal');
+                        ->on('laporanhist.id', '=', 'latest_laporanhist.id');
                 })
                 ->join('teknisi', 'teknisi.id', '=', 'laporan.id_teknisi')
                 ->select(
