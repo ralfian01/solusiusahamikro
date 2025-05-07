@@ -11,7 +11,7 @@ use App\Models\Log_cetak_laporan;
 use App\Models\LogAktivasi;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Facade\FlareClient\Stacktrace\File;
-use Illuminate\Support\Facades\Session; 
+use Illuminate\Support\Facades\Session;
 
 class PengawasController extends Controller
 {
@@ -21,7 +21,7 @@ class PengawasController extends Controller
      * @return \Illuminate\Http\Response
      */
 
-    public function regist (Request $request)
+    public function regist(Request $request)
     {
         $pass = bcrypt($request->password);
         $ttd = $request->ttd;
@@ -53,20 +53,20 @@ class PengawasController extends Controller
         return view('login');
     }
 
-    public function profile ()
+    public function profile()
     {
         $dt = DB::table('pengawas')
-        ->where('id','=', Auth::guard('pengawas')->user()->id)
-        ->first();
+            ->where('id', '=', Auth::guard('pengawas')->user()->id)
+            ->first();
 
         $role = DB::table('role')
-        ->where('nama', 'not like', '%Admin%')
-        ->orderBy('id', 'asc')
-        ->get();
+            ->where('nama', 'not like', '%Admin%')
+            ->orderBy('id', 'asc')
+            ->get();
 
         // dd($dt);
 
-        return view('pengawas.profile',compact('dt','role'));
+        return view('pengawas.profile', compact('dt', 'role'));
     }
 
     public function ttd(Request $request, $id)
@@ -108,10 +108,10 @@ class PengawasController extends Controller
         // dd($ttd, $filettd);
         */
         DB::table('pengawas')
-        ->where('id', $id)
-        ->update([
-            'ttd'  => base64_encode(file_get_contents($request->file('ttd')->getRealPath()))
-        ]);
+            ->where('id', $id)
+            ->update([
+                'ttd'  => base64_encode(file_get_contents($request->file('ttd')->getRealPath()))
+            ]);
 
         return redirect('profile-pengawas');
     }
@@ -119,42 +119,58 @@ class PengawasController extends Controller
     public function akun()
     {
         $pelapor = DB::table('pelapor as p')
-        ->leftJoin('laporan as l', 'p.id', '=', 'l.id_pelapor')
-        ->select(
-            'p.id','p.nama','p.nipp','p.email','p.password',
-            'p.jabatan','p.divisi','p.telepon','p.status',
-            DB::raw('COUNT(l.id) AS jumlah_laporan')
-        )
-        ->where('status', '=', 1)
-        ->groupBy('p.id', 'p.nama', 'p.nipp', 'p.email', 'p.password', 
-        'p.jabatan', 'p.divisi', 'p.telepon', 'p.status',)
-        ->orderByDesc('p.created_at')
-        ->get();
+            ->leftJoin('laporan as l', 'p.id', '=', 'l.id_pelapor')
+            ->select(
+                'p.id',
+                'p.nama',
+                'p.nipp',
+                'p.email',
+                'p.password',
+                'p.jabatan',
+                'p.divisi',
+                'p.telepon',
+                'p.status',
+                DB::raw('COUNT(l.id) AS jumlah_laporan')
+            )
+            ->where('status', '=', 1)
+            ->groupBy(
+                'p.id',
+                'p.nama',
+                'p.nipp',
+                'p.email',
+                'p.password',
+                'p.jabatan',
+                'p.divisi',
+                'p.telepon',
+                'p.status',
+            )
+            ->orderByDesc('p.created_at')
+            ->get();
 
-        $acc    = DB::table('pelapor')->where('status','=',0)->get();
+        $acc    = DB::table('pelapor')->where('status', '=', 0)->get();
         $cacc   = count($acc);
 
         $it = DB::table('teknisi as t')
-        ->select(
-            't.id',
-            't.nama',
-            't.nipp',
-            't.email',
-            't.jabatan',
-            DB::raw('COUNT(l.id) AS jumlah_laporan')
-        )
-        ->leftJoin('laporan as l', 't.id', '=', 'l.id_teknisi')
-        ->groupBy('t.id','t.nama','t.nipp','t.email','t.jabatan')
-        ->orderByDesc('t.created_at')
-        ->get();
+            ->select(
+                't.id',
+                't.nama',
+                't.nipp',
+                't.email',
+                't.jabatan',
+                DB::raw('COUNT(l.id) AS jumlah_laporan')
+            )
+            ->leftJoin('laporan as l', 't.id', '=', 'l.id_teknisi')
+            ->groupBy('t.id', 't.nama', 't.nipp', 't.email', 't.jabatan')
+            ->orderByDesc('t.created_at')
+            ->get();
 
         // dd($acc);
 
         $role = DB::table('role')
-        ->where('id', '>', 1)
-        ->get();
+            ->where('id', '>', 1)
+            ->get();
 
-        return view('pengawas.akun-user', compact('pelapor','it','cacc','acc','role'));
+        return view('pengawas.akun-user', compact('pelapor', 'it', 'cacc', 'acc', 'role'));
     }
 
     /**
@@ -165,55 +181,62 @@ class PengawasController extends Controller
     public function laporan()
     {
         $lap = DB::table('laporan')
-        ->leftJoin(DB::raw('(SELECT id_laporan, MAX(tanggal) AS tanggal FROM laporanhist GROUP BY id_laporan) AS latest_laporanhist'), function ($join) {
-            $join->on('laporan.id', '=', 'latest_laporanhist.id_laporan');
-        })
-        ->leftJoin('laporanhist', function ($join) {
-            $join->on('laporan.id', '=', 'laporanhist.id_laporan')
-                ->on('laporanhist.tanggal', '=', 'latest_laporanhist.tanggal');
-        })
-        ->leftJoin('teknisi', 'teknisi.id', '=', 'laporan.id_teknisi')
-        ->leftJoin('pelapor','pelapor.id','=','laporan.id_pelapor')
-        ->leftJoin('pengawas','pengawas.id','=','laporan.id_pengawas')
-        ->select(
-            DB::raw("DATE_FORMAT(tgl_masuk, '%d %M %Y') AS tgl_masuk"),
-            DB::raw("DATE_FORMAT(tgl_selesai, '%d %M %Y') AS tgl_selesai"),
-            'laporan.no_inv_aset',
-            'laporan.waktu_tambahan',
-            'laporanhist.status_laporan as status_terakhir',
-            'laporan.id AS id',
-            'id_teknisi','lap_no_ref as no_ref','lap_bisnis_area as bisnis_area',
-            'teknisi.nama as nama_teknisi',
-            'laporan.lap_no_ref','laporan.lap_tanggal','laporan.lap_bisnis_area','laporan.lap_versi','laporan.lap_halaman','laporan.lap_nomor',
-            'pelapor.nama AS nama_pelapor',
-            'pelapor.divisi',
-            'pelapor.email',
-            'pelapor.telepon',
-            'pelapor.nipp as nipp_pelapor',
-            'pengawas.ttd'
-        )
-        ->where('laporanhist.status_laporan','=','Selesai')
-        ->whereNull('id_pengawas')
-        ->orderByDesc('laporan.tgl_masuk')
-        ->get();
-        
+            ->leftJoin(DB::raw('(SELECT id_laporan, MAX(id) AS id FROM laporanhist GROUP BY id_laporan) AS latest_laporanhist'), function ($join) {
+                $join->on('laporan.id', '=', 'latest_laporanhist.id_laporan');
+            })
+            ->leftJoin('laporanhist', function ($join) {
+                $join->on('laporan.id', '=', 'laporanhist.id_laporan')
+                    ->on('laporanhist.id', '=', 'latest_laporanhist.id');
+            })
+            ->leftJoin('teknisi', 'teknisi.id', '=', 'laporan.id_teknisi')
+            ->leftJoin('pelapor', 'pelapor.id', '=', 'laporan.id_pelapor')
+            ->leftJoin('pengawas', 'pengawas.id', '=', 'laporan.id_pengawas')
+            ->select(
+                DB::raw("DATE_FORMAT(tgl_masuk, '%d %M %Y') AS tgl_masuk"),
+                DB::raw("DATE_FORMAT(tgl_selesai, '%d %M %Y') AS tgl_selesai"),
+                'laporan.no_inv_aset',
+                'laporan.waktu_tambahan',
+                'laporanhist.status_laporan as status_terakhir',
+                'laporan.id AS id',
+                'id_teknisi',
+                'lap_no_ref as no_ref',
+                'lap_bisnis_area as bisnis_area',
+                'teknisi.nama as nama_teknisi',
+                'laporan.lap_no_ref',
+                'laporan.lap_tanggal',
+                'laporan.lap_bisnis_area',
+                'laporan.lap_versi',
+                'laporan.lap_halaman',
+                'laporan.lap_nomor',
+                'pelapor.nama AS nama_pelapor',
+                'pelapor.divisi',
+                'pelapor.email',
+                'pelapor.telepon',
+                'pelapor.nipp as nipp_pelapor',
+                'pengawas.ttd'
+            )
+            ->where('laporanhist.status_laporan', '=', 'Selesai')
+            ->whereNull('id_pengawas')
+            ->orderByDesc('laporan.tgl_masuk')
+            ->get();
+
         // dd($lap);
         $role = DB::table('role')
-        ->where('id', '>', 1)
-        ->get();
+            ->where('id', '>', 1)
+            ->get();
 
-        return view('pengawas.laporan', compact('lap','role'));
+        return view('pengawas.laporan', compact('lap', 'role'));
     }
 
     public function ambil($idlap)
     {
         DB::table('laporan')
-        ->where('id', $idlap)
+            ->where('id', $idlap)
             ->update([
                 'id_pengawas' => Auth::guard('pengawas')->user()->id
             ]);
 
-        Session::flash('success'); 
+        Session::flash('success');
 
         return back();
     }
@@ -221,7 +244,7 @@ class PengawasController extends Controller
     public function alih_laporan(Request $request, $idlap)
     {
         DB::table('laporan')
-        ->where('id', $idlap)
+            ->where('id', $idlap)
             ->update([
                 'alihkan_pws' => $request->id_pengawas
             ]);
@@ -234,52 +257,54 @@ class PengawasController extends Controller
     public function laporan_cetak()
     {
         $lap = DB::table('laporan')
-        ->leftJoin(DB::raw('(SELECT id_laporan, MAX(tanggal) AS tanggal FROM laporanhist GROUP BY id_laporan) AS latest_laporanhist'), function ($join) {
-            $join->on('laporan.id', '=', 'latest_laporanhist.id_laporan');
-        })
-        ->leftJoin('laporanhist', function ($join) {
-            $join->on('laporan.id', '=', 'laporanhist.id_laporan')
-            ->on('laporanhist.tanggal', '=', 'latest_laporanhist.tanggal');
-        })
-        ->leftJoin('teknisi', 'teknisi.id', '=', 'laporan.id_teknisi')
-        ->leftJoin('pelapor', 'pelapor.id', '=', 'laporan.id_pelapor')
-        ->leftJoin('pengawas', 'pengawas.id', '=', 'laporan.alihkan_pws')
-        ->select(
-            DB::raw("DATE_FORMAT(tgl_masuk, '%d %M %Y') AS tgl_masuk"),
-            DB::raw("DATE_FORMAT(tgl_selesai, '%d %M %Y') AS tgl_selesai"),
-            'laporan.no_inv_aset',
-            'laporan.waktu_tambahan',
-            'laporanhist.status_laporan as status_terakhir',
-            'laporan.id AS id',
-            'id_teknisi',
-            'lap_no_ref as no_ref',
-            'lap_bisnis_area as bisnis_area',
-            'teknisi.nama as nama_teknisi',
-            'laporan.lap_no_ref',
-            'laporan.lap_tanggal',
-            'laporan.lap_bisnis_area',
-            'laporan.lap_versi',
-            'laporan.lap_halaman',
-            'laporan.lap_nomor',
-            'pelapor.nama AS nama_pelapor',
-            'pelapor.divisi',
-            'pelapor.email',
-            'pelapor.telepon',
-            'pelapor.nipp as nipp_pelapor',
-            'pengawas.ttd','laporan.alihkan_pws','pengawas.nama as nama_pws'
-        )
-        ->where('laporanhist.status_laporan', '=', 'Selesai')
-        ->where('id_pengawas','=', Auth::guard('pengawas')->user()->id)
-        ->orderByDesc('laporan.tgl_masuk')
-        ->get();
+            ->leftJoin(DB::raw('(SELECT id_laporan, MAX(tanggal) AS tanggal FROM laporanhist GROUP BY id_laporan) AS latest_laporanhist'), function ($join) {
+                $join->on('laporan.id', '=', 'latest_laporanhist.id_laporan');
+            })
+            ->leftJoin('laporanhist', function ($join) {
+                $join->on('laporan.id', '=', 'laporanhist.id_laporan')
+                    ->on('laporanhist.tanggal', '=', 'latest_laporanhist.tanggal');
+            })
+            ->leftJoin('teknisi', 'teknisi.id', '=', 'laporan.id_teknisi')
+            ->leftJoin('pelapor', 'pelapor.id', '=', 'laporan.id_pelapor')
+            ->leftJoin('pengawas', 'pengawas.id', '=', 'laporan.alihkan_pws')
+            ->select(
+                DB::raw("DATE_FORMAT(tgl_masuk, '%d %M %Y') AS tgl_masuk"),
+                DB::raw("DATE_FORMAT(tgl_selesai, '%d %M %Y') AS tgl_selesai"),
+                'laporan.no_inv_aset',
+                'laporan.waktu_tambahan',
+                'laporanhist.status_laporan as status_terakhir',
+                'laporan.id AS id',
+                'id_teknisi',
+                'lap_no_ref as no_ref',
+                'lap_bisnis_area as bisnis_area',
+                'teknisi.nama as nama_teknisi',
+                'laporan.lap_no_ref',
+                'laporan.lap_tanggal',
+                'laporan.lap_bisnis_area',
+                'laporan.lap_versi',
+                'laporan.lap_halaman',
+                'laporan.lap_nomor',
+                'pelapor.nama AS nama_pelapor',
+                'pelapor.divisi',
+                'pelapor.email',
+                'pelapor.telepon',
+                'pelapor.nipp as nipp_pelapor',
+                'pengawas.ttd',
+                'laporan.alihkan_pws',
+                'pengawas.nama as nama_pws'
+            )
+            ->where('laporanhist.status_laporan', '=', 'Selesai')
+            ->where('id_pengawas', '=', Auth::guard('pengawas')->user()->id)
+            ->orderByDesc('laporan.tgl_masuk')
+            ->get();
 
         $pengawas = DB::table('pengawas')->orderByDesc('created_at')->get();
 
         $role = DB::table('role')
-        ->where('id', '>', 1)
-        ->get();
+            ->where('id', '>', 1)
+            ->get();
 
-        return view('pengawas.laporan-cetak',compact('lap','pengawas','role'));
+        return view('pengawas.laporan-cetak', compact('lap', 'pengawas', 'role'));
     }
 
     public function cetak($idlap)
@@ -287,48 +312,48 @@ class PengawasController extends Controller
         Carbon::setLocale('id');
 
         $detlap = DB::table('detlaporan')
-        ->where('id_laporan', '=', $idlap)
-        ->orderBy('id')
-        ->get();
+            ->where('id_laporan', '=', $idlap)
+            ->orderBy('id')
+            ->get();
 
         $lap = DB::table('laporan')
-        ->leftJoin('pengawas', 'pengawas.id', '=', 'laporan.id_pengawas')
-        ->leftJoin('teknisi', 'teknisi.id', '=', 'laporan.id_teknisi')
-        ->leftJoin('pelapor', 'pelapor.id', '=', 'laporan.id_pelapor')
-        ->select(
-            'pelapor.nama AS nama_pelapor',
-            'pelapor.divisi AS alamat',
-            'pelapor.jabatan AS posisi',
-            'pelapor.email',
-            'pelapor.telepon',
-            'pelapor.nipp as nipp_pelapor',
-            'pelapor.ttd as ttd_pelapor',
-            'pengawas.nama as nama_pengawas',
-            'pengawas.nipp as nipp_pengawas',
-            'pengawas.ttd as ttd_pengawas',
-            'teknisi.nama as nama_teknisi',
-            'teknisi.nipp as nipp_teknisi',
-            'teknisi.ttd as ttd_teknisi',
-            'laporan.id as idlap',
-            'laporan.no_inv_aset',
-            'laporan.lap_no_ref as no_ref',
-            'laporan.lap_bisnis_area as bisnis_area',
-            'laporan.lap_versi as versi',
-            'laporan.lap_halaman as halaman',
-            'laporan.lap_nomor as nomor',
-            DB::raw("DATE_FORMAT(laporan.lap_tanggal, '%d-%m-%Y') AS tanggal"),
-            DB::raw("DATE_FORMAT(laporan.tgl_masuk, '%d-%m-%Y') AS tgl_masuk"),
-            DB::raw("DATE_FORMAT(laporan.tgl_masuk, '%H:%i WIB') AS waktu_masuk"),
-            DB::raw("DATE_FORMAT(laporan.tgl_selesai, '%d-%m-%Y') AS tgl_selesai"),
-            DB::raw("DATE_FORMAT(laporan.tgl_selesai, '%H:%i WIB') AS waktu_selesai"),
-            DB::raw("DATE_FORMAT(laporan.tgl_awal_pengerjaan, '%d-%m-%Y') AS tgl_awal_pengerjaan"),
-            DB::raw("DATE_FORMAT(laporan.tgl_awal_pengerjaan, '%H:%i WIB') AS waktu_awal_pengerjaan"),
-            DB::raw("DATE_FORMAT(laporan.tgl_akhir_pengerjaan, '%d-%m-%Y') AS tgl_akhir_pengerjaan"),
-            DB::raw("DATE_FORMAT(laporan.tgl_akhir_pengerjaan, '%H:%i WIB') AS waktu_akhir_pengerjaan")
-        )
+            ->leftJoin('pengawas', 'pengawas.id', '=', 'laporan.id_pengawas')
+            ->leftJoin('teknisi', 'teknisi.id', '=', 'laporan.id_teknisi')
+            ->leftJoin('pelapor', 'pelapor.id', '=', 'laporan.id_pelapor')
+            ->select(
+                'pelapor.nama AS nama_pelapor',
+                'pelapor.divisi AS alamat',
+                'pelapor.jabatan AS posisi',
+                'pelapor.email',
+                'pelapor.telepon',
+                'pelapor.nipp as nipp_pelapor',
+                'pelapor.ttd as ttd_pelapor',
+                'pengawas.nama as nama_pengawas',
+                'pengawas.nipp as nipp_pengawas',
+                'pengawas.ttd as ttd_pengawas',
+                'teknisi.nama as nama_teknisi',
+                'teknisi.nipp as nipp_teknisi',
+                'teknisi.ttd as ttd_teknisi',
+                'laporan.id as idlap',
+                'laporan.no_inv_aset',
+                'laporan.lap_no_ref as no_ref',
+                'laporan.lap_bisnis_area as bisnis_area',
+                'laporan.lap_versi as versi',
+                'laporan.lap_halaman as halaman',
+                'laporan.lap_nomor as nomor',
+                DB::raw("DATE_FORMAT(laporan.lap_tanggal, '%d-%m-%Y') AS tanggal"),
+                DB::raw("DATE_FORMAT(laporan.tgl_masuk, '%d-%m-%Y') AS tgl_masuk"),
+                DB::raw("DATE_FORMAT(laporan.tgl_masuk, '%H:%i WIB') AS waktu_masuk"),
+                DB::raw("DATE_FORMAT(laporan.tgl_selesai, '%d-%m-%Y') AS tgl_selesai"),
+                DB::raw("DATE_FORMAT(laporan.tgl_selesai, '%H:%i WIB') AS waktu_selesai"),
+                DB::raw("DATE_FORMAT(laporan.tgl_awal_pengerjaan, '%d-%m-%Y') AS tgl_awal_pengerjaan"),
+                DB::raw("DATE_FORMAT(laporan.tgl_awal_pengerjaan, '%H:%i WIB') AS waktu_awal_pengerjaan"),
+                DB::raw("DATE_FORMAT(laporan.tgl_akhir_pengerjaan, '%d-%m-%Y') AS tgl_akhir_pengerjaan"),
+                DB::raw("DATE_FORMAT(laporan.tgl_akhir_pengerjaan, '%H:%i WIB') AS waktu_akhir_pengerjaan")
+            )
             ->where('laporan.id', '=', $idlap)
             ->first();
-            
+
         if ($lap) {
             $tgl_awal_pengerjaan = Carbon::parse($lap->tgl_awal_pengerjaan)->translatedFormat('d F Y');
             $tgl_akhir_pengerjaan = Carbon::parse($lap->tgl_akhir_pengerjaan)->translatedFormat('d F Y');
@@ -338,11 +363,15 @@ class PengawasController extends Controller
         }
 
         $kop = DB::table('kop_surat')
-        ->select([
-            'nomor', DB::raw("DATE_FORMAT(tanggal, '%d %M %Y') AS tanggal_f"), 'versi', 'halaman', 'id'
-        ])
-        ->orderByDesc('created_at')
-        ->first();
+            ->select([
+                'nomor',
+                DB::raw("DATE_FORMAT(tanggal, '%d %M %Y') AS tanggal_f"),
+                'versi',
+                'halaman',
+                'id'
+            ])
+            ->orderByDesc('created_at')
+            ->first();
 
         if ($kop) {
             $tanggal_f = Carbon::parse($kop->tanggal_f)->translatedFormat('d F Y');
@@ -350,7 +379,7 @@ class PengawasController extends Controller
             $tanggal = null;
         }
 
-        $today = Carbon::now()->locale('id')->translatedFormat('d F Y'); 
+        $today = Carbon::now()->locale('id')->translatedFormat('d F Y');
 
         $no_ref = $lap->no_ref;
         $bisnis_area = $lap->bisnis_area;
@@ -367,32 +396,32 @@ class PengawasController extends Controller
         $katjns = array();
 
         $kat = DB::table('kat_layanan')
-        ->orderBy('id')
-        ->get();
+            ->orderBy('id')
+            ->get();
 
         $role = DB::table('role')
-        ->where('nama', 'NOT LIKE', '%admin%')
-        ->orderBy('id')
-        ->get();
+            ->where('nama', 'NOT LIKE', '%admin%')
+            ->orderBy('id')
+            ->get();
 
         foreach ($kat as $row) {
             $jns = DB::table('jenis_layanan')
-            ->where('kat_layanan', $row->id)
-            ->orderBy('id', 'asc')
-            ->get();
+                ->where('kat_layanan', $row->id)
+                ->orderBy('id', 'asc')
+                ->get();
 
             foreach ($jns as $rowd) {
-                array_push($katjns, [$jns->count()+1,$row->nama,$rowd->nama]);
+                array_push($katjns, [$jns->count() + 1, $row->nama, $rowd->nama]);
             }
-            array_push($katjns, [$jns->count()+1,$row->nama,'Lainnya']);
+            array_push($katjns, [$jns->count() + 1, $row->nama, 'Lainnya']);
         }
 
         $pdf = Pdf::loadView('pengawas.cetakNew', compact('lap', 'detlap', 'tgl_awal_pengerjaan', 'tgl_akhir_pengerjaan', 'tanggal_f', 'kop', 'katjns', 'role'))
-        ->setPaper(array(0.0, 0.0, 612.00, 935.43), 'portrait')
-        ->set_option('isPhpEnabled', true);
-        
+            ->setPaper(array(0.0, 0.0, 612.00, 935.43), 'portrait')
+            ->set_option('isPhpEnabled', true);
+
         return $pdf->stream($laporan);
-        
+
         /*
         return response()->streamDownload(
             fn () => print($pdf),
@@ -419,18 +448,18 @@ class PengawasController extends Controller
     public function detail($id)
     {
         $detlaporan = DB::table('detlaporan')
-        ->where('id_laporan', '=', $id)->get();
+            ->where('id_laporan', '=', $id)->get();
 
         $laporan = DB::table('laporan')
-        ->leftJoin(DB::raw('(SELECT id_laporan, MAX(tanggal) AS tanggal FROM laporanhist GROUP BY id_laporan) AS latest_laporanhist'), function ($join) {
-            $join->on('laporan.id', '=', 'latest_laporanhist.id_laporan');
-        })
-        ->leftJoin('laporanhist', function ($join) {
-            $join->on('laporan.id', '=', 'laporanhist.id_laporan')
-                ->on('laporanhist.tanggal', '=', 'latest_laporanhist.tanggal');
-        })
-        ->leftjoin('teknisi', 'teknisi.id', '=', 'laporan.id_teknisi')
-        ->where('laporan.id', '=', $id)
+            ->leftJoin(DB::raw('(SELECT id_laporan, MAX(tanggal) AS tanggal FROM laporanhist GROUP BY id_laporan) AS latest_laporanhist'), function ($join) {
+                $join->on('laporan.id', '=', 'latest_laporanhist.id_laporan');
+            })
+            ->leftJoin('laporanhist', function ($join) {
+                $join->on('laporan.id', '=', 'laporanhist.id_laporan')
+                    ->on('laporanhist.tanggal', '=', 'latest_laporanhist.tanggal');
+            })
+            ->leftjoin('teknisi', 'teknisi.id', '=', 'laporan.id_teknisi')
+            ->where('laporan.id', '=', $id)
             ->select(
                 DB::raw("DATE_FORMAT(laporan.tgl_masuk, '%d %M %Y') AS tgl_masuk"),
                 DB::raw("DATE_FORMAT(laporan.tgl_awal_pengerjaan, '%d %M %Y, %H:%i WIB') AS tgl_awal_pengerjaan"),
@@ -441,16 +470,21 @@ class PengawasController extends Controller
                 'teknisi.nama',
                 'laporanhist.status_laporan as status_terakhir',
                 'laporan.id as id',
-                'lap_no_ref','lap_tanggal','lap_bisnis_area','lap_versi','lap_halaman','lap_nomor'
+                'lap_no_ref',
+                'lap_tanggal',
+                'lap_bisnis_area',
+                'lap_versi',
+                'lap_halaman',
+                'lap_nomor'
             )
             ->first();
 
         // dd($dtp);
         $role = DB::table('role')
-        ->where('id', '>', 1)
-        ->get();
+            ->where('id', '>', 1)
+            ->get();
 
-        return view('pengawas.detail', compact('laporan','detlaporan','role'));
+        return view('pengawas.detail', compact('laporan', 'detlaporan', 'role'));
     }
 
     /**
@@ -486,6 +520,4 @@ class PengawasController extends Controller
     {
         //
     }
-
-
 }
