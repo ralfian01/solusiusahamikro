@@ -257,12 +257,12 @@ class PengawasController extends Controller
     public function laporan_cetak()
     {
         $lap = DB::table('laporan')
-            ->leftJoin(DB::raw('(SELECT id_laporan, MAX(tanggal) AS tanggal FROM laporanhist GROUP BY id_laporan) AS latest_laporanhist'), function ($join) {
+            ->leftJoin(DB::raw('(SELECT id_laporan, MAX(id) AS id FROM laporanhist GROUP BY id_laporan) AS latest_laporanhist'), function ($join) {
                 $join->on('laporan.id', '=', 'latest_laporanhist.id_laporan');
             })
             ->leftJoin('laporanhist', function ($join) {
                 $join->on('laporan.id', '=', 'laporanhist.id_laporan')
-                    ->on('laporanhist.tanggal', '=', 'latest_laporanhist.tanggal');
+                    ->on('laporanhist.id', '=', 'latest_laporanhist.id');
             })
             ->leftJoin('teknisi', 'teknisi.id', '=', 'laporan.id_teknisi')
             ->leftJoin('pelapor', 'pelapor.id', '=', 'laporan.id_pelapor')
@@ -294,7 +294,7 @@ class PengawasController extends Controller
                 'pengawas.nama as nama_pws'
             )
             ->where('laporanhist.status_laporan', '=', 'Selesai')
-            ->where('id_pengawas', '=', Auth::guard('pengawas')->user()->id)
+            ->where('laporan.id_pengawas', '=', Auth::guard('pengawas')->user()->id)
             ->orderByDesc('laporan.tgl_masuk')
             ->get();
 
@@ -303,6 +303,9 @@ class PengawasController extends Controller
         $role = DB::table('role')
             ->where('id', '>', 1)
             ->get();
+
+        // print_r($lap);
+        // die;
 
         return view('pengawas.laporan-cetak', compact('lap', 'pengawas', 'role'));
     }
